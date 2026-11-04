@@ -29,10 +29,11 @@ Everything else (forecast, radar, air quality, sun, moon) works worldwide.
 
 ## Install
 
-See [docs/install.md](docs/install.md). Short version: add the catalog address in the companion app, or install the zip from
-the Releases page.
+See [docs/install.md](docs/install.md). Short version: install it from the bridgething store once it is listed, or paste the
+address of the version zip into the companion app's "install from url or file" panel (not yet tested on a real device).
 
-- Catalog address: `https://tomarlowe.github.io/dash-weather/catalog.v1.json`
+- Catalog address, which the store reads: `https://tomarlowe.github.io/dash-weather/catalog.v1.json`
+- Zip for version 0.1.0: `https://tomarlowe.github.io/dash-weather/r/01a1a417-eafb-71c3-b41e-70de98fc1cb7/0.1.0.zip`
 
 ## Documentation
 

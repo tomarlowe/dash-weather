@@ -10,21 +10,27 @@ There are three ways to install. Pick one.
 Once Dash Weather is listed in the store, find it at [bridgething.com/apps](https://bridgething.com/apps) and install it
 through the companion app. Updates arrive on their own.
 
-## Option 2: add the catalog address
+## Option 2: install the zip by its web address
 
-This works even if the app is not listed in the store.
+The companion app has an "install from url or file" panel on its Apps screen. It asks for the address of an app zip.
 
-1. Open the bridgething companion app on your phone.
-2. Add a new app source and paste this address:
+1. Open the bridgething companion app on your phone and go to the Apps screen.
+2. Open the "install from url or file" panel.
+3. Paste this address, then tap install:
 
-   `https://tomarlowe.github.io/dash-weather/catalog.v1.json`
+   `https://tomarlowe.github.io/dash-weather/r/01a1a417-eafb-71c3-b41e-70de98fc1cb7/0.1.0.zip`
 
-3. Open the source, choose Dash Weather and install it.
+This is the zip for version 0.1.0. The [catalog](https://tomarlowe.github.io/dash-weather/catalog.v1.json) lists the
+address of every version.
 
-## Option 3: install the zip
+## Option 3: install a downloaded zip file
 
-1. Download `Dash-Weather-<version>.zip` from the project's Releases page. Do not unzip it.
-2. Install the zip from the companion app.
+1. Download the zip from the address in Option 2 to your phone. Do not unzip it.
+2. In the same "install from url or file" panel, tap "choose a zip" and pick the file.
+
+The author has not yet installed Dash Weather through Option 2 or Option 3 on a real device. The panel and its buttons are
+real, but if the install fails, please [open an issue](https://github.com/tomarlowe/dash-weather/issues) and say what the
+app showed.
 
 ## First start
 
