@@ -1,10 +1,10 @@
 {
   "$schema": "https://apps.bridgething.com/schemas/catalog/v1.json",
   "schema": "catalog.v1",
-  "updated_at": "2026-11-04T18:32:26.275Z",
+  "updated_at": "2026-11-04T19:05:09.995Z",
   "repo": {
-    "name": "dash-weather",
-    "description": "Webapps by dash-weather.",
+    "name": "Dash Weather",
+    "description": "A five-screen weather station for the Spotify Car Thing.",
     "homepage": "https://github.com/tomarlowe/dash-weather",
     "icon": null
   },
