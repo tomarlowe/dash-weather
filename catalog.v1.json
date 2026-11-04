@@ -1,0 +1,54 @@
+{
+  "$schema": "https://apps.bridgething.com/schemas/catalog/v1.json",
+  "schema": "catalog.v1",
+  "updated_at": "2026-11-04T18:32:26.275Z",
+  "repo": {
+    "name": "dash-weather",
+    "description": "Webapps by dash-weather.",
+    "homepage": "https://github.com/tomarlowe/dash-weather",
+    "icon": null
+  },
+  "apps": [
+    {
+      "id": "01a1a417-eafb-71c3-b41e-70de98fc1cb7",
+      "name": "Dash Weather",
+      "description": "Hourly, today, radar map, 5-day, plus tides, sun, moon and air quality. Uses your phone's location.",
+      "author": "Thomas Marlowe",
+      "icon": "https://tomarlowe.github.io/dash-weather/icons/01a1a417-eafb-71c3-b41e-70de98fc1cb7.png",
+      "screenshots": [
+        "https://tomarlowe.github.io/dash-weather/screenshots/01a1a417-eafb-71c3-b41e-70de98fc1cb7/01.png",
+        "https://tomarlowe.github.io/dash-weather/screenshots/01a1a417-eafb-71c3-b41e-70de98fc1cb7/02.png",
+        "https://tomarlowe.github.io/dash-weather/screenshots/01a1a417-eafb-71c3-b41e-70de98fc1cb7/03.png",
+        "https://tomarlowe.github.io/dash-weather/screenshots/01a1a417-eafb-71c3-b41e-70de98fc1cb7/04.png",
+        "https://tomarlowe.github.io/dash-weather/screenshots/01a1a417-eafb-71c3-b41e-70de98fc1cb7/05.png"
+      ],
+      "categories": [
+        "clocks-weather"
+      ],
+      "homepage": "https://github.com/tomarlowe/dash-weather",
+      "source": "https://github.com/tomarlowe/dash-weather",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "released_at": "2026-11-04T18:32:26.240Z",
+          "download": {
+            "url": "https://tomarlowe.github.io/dash-weather/r/01a1a417-eafb-71c3-b41e-70de98fc1cb7/0.1.0.zip",
+            "size": 581594,
+            "sha256": "969e19a3e4caefa4e3afa5cb805a638e877147eeb3f89d8966bf0fabd34c4aa7"
+          },
+          "settings": {
+            "url": "https://tomarlowe.github.io/dash-weather/s/01a1a417-eafb-71c3-b41e-70de98fc1cb7/0.1.0.html",
+            "size": 40601,
+            "sha256": "11a09a1be9ce104587053892f3340431292b825060e5ae0b6485d598a32abb6f"
+          },
+          "permissions": [
+            "geo"
+          ],
+          "min_libbridgething_version": "0.16.0",
+          "changelog": "First release.\n\n- Five screens: Hourly (button 1), Today (2), Map (3), 5-Day (4) and Sky & Sea (the recessed button).\n- Live rain radar over a street map. The dial zooms the map. Dial click and back button are left free.\n- Tides from the nearest NOAA station, sunrise and sunset, moon phase, air quality and humidity.\n- Follows your phone's location, or use a fixed place.\n- Settings for units, clock, location, tide station, map tile address, map darkening and dial direction."
+        }
+      ]
+    }
+  ],
+  "recommended_sources": []
+}
