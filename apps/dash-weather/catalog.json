@@ -1,0 +1,11 @@
+{
+  "author": "Thomas Marlowe",
+  "homepage": "https://github.com/tomarlowe/dash-weather",
+  "source": "https://github.com/tomarlowe/dash-weather",
+  "icon": null,
+  "screenshots": [],
+  "categories": [
+    "clocks-weather"
+  ],
+  "min_libbridgething_version": "0.16.0"
+}

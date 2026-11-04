@@ -1,0 +1,111 @@
+{
+  "id": "01a1a417-eafb-71c3-b41e-70de98fc1cb7",
+  "name": "Dash Weather",
+  "version": "0.1.0",
+  "description": "Hourly, today, radar map, 5-day, plus tides, sun, moon and air quality. Uses your phone's location.",
+  "icon": "icon.png",
+  "settings": "settings.html",
+  "config": [
+    {
+      "type": "enum",
+      "data": {
+        "key": "units",
+        "label": "Units",
+        "description": "Imperial is F, mph, miles and feet. Metric is C, km/h, kilometers and meters.",
+        "choices": ["imperial", "metric"],
+        "choiceLabels": { "imperial": "Imperial (F, mph)", "metric": "Metric (C, km/h)" },
+        "default": "imperial"
+      }
+    },
+    {
+      "type": "enum",
+      "data": {
+        "key": "clock",
+        "label": "Clock",
+        "description": "How times are shown.",
+        "choices": ["12", "24"],
+        "choiceLabels": { "12": "12-hour (4:12 PM)", "24": "24-hour (16:12)" },
+        "default": "12"
+      }
+    },
+    {
+      "type": "enum",
+      "data": {
+        "key": "location_mode",
+        "label": "Location",
+        "description": "Auto follows your phone's GPS. Manual always uses the coordinates below.",
+        "choices": ["auto", "manual"],
+        "choiceLabels": { "auto": "Follow my phone", "manual": "Fixed place" },
+        "default": "auto"
+      }
+    },
+    {
+      "type": "number",
+      "data": {
+        "key": "manual_lat",
+        "label": "Fixed latitude",
+        "description": "Used only when Location is Fixed place. Example: 40.7128",
+        "min": -90,
+        "max": 90,
+        "step": 0.0001,
+        "default": 0
+      }
+    },
+    {
+      "type": "number",
+      "data": {
+        "key": "manual_lon",
+        "label": "Fixed longitude",
+        "description": "Used only when Location is Fixed place. Example: -74.0060",
+        "min": -180,
+        "max": 180,
+        "step": 0.0001,
+        "default": 0
+      }
+    },
+    {
+      "type": "string",
+      "data": {
+        "key": "tide_station",
+        "label": "Tide station (optional)",
+        "description": "Leave empty to use the nearest NOAA station. Or enter a station number, such as 8518750.",
+        "pattern": "^[A-Za-z0-9]*$",
+        "minLength": 0,
+        "maxLength": 10,
+        "default": ""
+      }
+    },
+    {
+      "type": "string",
+      "data": {
+        "key": "tile_url",
+        "label": "Map tile address (advanced)",
+        "description": "Leave empty for OpenStreetMap. To use another provider, paste its https address containing {z}, {x} and {y}.",
+        "pattern": "^$|^https://[^ ]*\\{z\\}[^ ]*\\{x\\}[^ ]*\\{y\\}[^ ]*$",
+        "minLength": 0,
+        "maxLength": 300,
+        "default": ""
+      }
+    },
+    {
+      "type": "boolean",
+      "data": {
+        "key": "map_darken",
+        "label": "Darken map tiles",
+        "description": "Turns the light OpenStreetMap look into a dark one. Turn off if your own tile address is already dark.",
+        "default": true
+      }
+    },
+    {
+      "type": "boolean",
+      "data": {
+        "key": "dial_reverse",
+        "label": "Reverse the dial",
+        "description": "Turn this on if the map zooms the wrong way when you turn the dial.",
+        "default": false
+      }
+    }
+  ],
+  "permissions": ["geo"],
+  "art": { "heroPx": 248, "thumbPx": 96 }
+}
