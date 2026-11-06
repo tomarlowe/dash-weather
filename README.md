@@ -4,6 +4,40 @@ A weather station for the discontinued Spotify Car Thing, running on [bridgethin
 one for each button, in bright Material 3 Expressive colors on a black background. It is free, has no accounts or API
 keys, and is open source.
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="apps/dash-weather/screenshots/01.png" alt="Hourly screen: now plus the next five hours, with temperature, sky and chance of rain" width="400"><br>
+      <b>Hourly</b> (button 1)
+    </td>
+    <td align="center">
+      <img src="apps/dash-weather/screenshots/02.png" alt="Today screen: current temperature, high and low, feels like, wind, chance of rain and a one-line tip" width="400"><br>
+      <b>Today</b> (button 2)
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="apps/dash-weather/screenshots/03.png" alt="Map screen: live rain radar over a street map" width="400"><br>
+      <b>Map</b> (button 3)
+    </td>
+    <td align="center">
+      <img src="apps/dash-weather/screenshots/04.png" alt="5-Day screen: five days of sky, high and low, and chance of rain" width="400"><br>
+      <b>5-Day</b> (button 4)
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="apps/dash-weather/screenshots/05.png" alt="Sky and Sea screen: tides, sunrise and sunset, moon phase, air quality and humidity" width="400"><br>
+      <b>Sky &amp; Sea</b> (recessed button)
+    </td>
+    <td></td>
+  </tr>
+</table>
+
+The screenshots show Location set to a fixed place in New York, with the 24-hour clock.
+
 ## The five screens
 
 | Button          | Screen    | What it shows                                                                    |
