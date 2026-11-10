@@ -36,31 +36,13 @@ const icoBase: CSSProperties = {
 export function TopStrip({ active, onPick, pin, moon }: StripProps) {
   return (
     <nav aria-label="Screens" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', height: 68 }}>
-      {SCREENS.map(s => {
-        const Glyph = GLYPHS[s.id];
-        const on = s.id === active;
-        const style: CSSProperties = {
-          flex: 1,
-          minWidth: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          height: 44,
-          borderRadius: 22,
-          background: on ? s.bg : 'rgba(255,255,255,0.08)',
-          color: on ? s.fg : '#C9CFDB',
-          fontSize: 18,
-          fontWeight: on ? 700 : 600,
-          whiteSpace: 'nowrap',
-        };
-        return (
-          <div key={s.id} style={style} onPointerDown={() => onPick(s.id)}>
-            <Glyph />
-            <span>{s.label}</span>
-          </div>
-        );
-      })}
+      <button
+        type="button"
+        aria-label={moon.lit ? 'Screen is dimmed. Tap to brighten.' : 'Dim the screen'}
+        style={{ ...icoBase, color: moon.lit ? '#FFD966' : '#9AA3B5' }}
+        onPointerDown={moon.onTap}>
+        <MoonGlyph size={24} filled={moon.lit} />
+      </button>
       {pin.show && (
         <button
           type="button"
@@ -91,13 +73,31 @@ export function TopStrip({ active, onPick, pin, moon }: StripProps) {
           )}
         </button>
       )}
-      <button
-        type="button"
-        aria-label={moon.lit ? 'Screen is dimmed. Tap to brighten.' : 'Dim the screen'}
-        style={{ ...icoBase, color: moon.lit ? '#FFD966' : '#9AA3B5' }}
-        onPointerDown={moon.onTap}>
-        <MoonGlyph size={24} filled={moon.lit} />
-      </button>
+      {SCREENS.map(s => {
+        const Glyph = GLYPHS[s.id];
+        const on = s.id === active;
+        const style: CSSProperties = {
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          height: 44,
+          borderRadius: 22,
+          background: on ? s.bg : 'rgba(255,255,255,0.08)',
+          color: on ? s.fg : '#C9CFDB',
+          fontSize: 18,
+          fontWeight: on ? 700 : 600,
+          whiteSpace: 'nowrap',
+        };
+        return (
+          <div key={s.id} style={style} onPointerDown={() => onPick(s.id)}>
+            <Glyph />
+            <span>{s.label}</span>
+          </div>
+        );
+      })}
     </nav>
   );
 }

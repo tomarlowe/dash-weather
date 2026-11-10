@@ -15,8 +15,8 @@ Not for navigation or safety. The screen is made to be glanced at in a car, and 
 | Dial click            | On Hourly and Map only: switches the dial to scrubbing the hours (Hourly) or zooming (Map), and back. Does nothing on the other screens |
 | Back button           | Not used by this app                                                                               |
 | Touch                 | Tap any of the five pills along the top to switch screens                                          |
-| Pin icon (top right)  | Only when a second place is set. Switches every screen between your location and the second place |
-| Moon icon (top right) | Dims the screen, or brightens it again                                                             |
+| Pin icon (top left)   | Only when a second place is set. Switches every screen between your location and the second place |
+| Moon icon (top left)  | Dims the screen, or brightens it again                                                             |
 
 A quick tap of the recessed button opens Map. Bridgething also uses that button to jump to its own dashboard. Which gesture
 does it is a bridgething setting (a long press, five quick presses or a double press), not part of this app. With a long
@@ -93,7 +93,7 @@ picture, turn off "Animate radar" in settings. That also downloads fewer map squ
 ## Second place
 
 Open settings and fill in "Second place name", latitude and longitude, for example Boston, MA at 42.3601 and -71.0589. A pin
-icon appears at the top right. Tap it and every screen switches to that place: the forecast, alerts, tides, air quality, sun,
+icon appears at the top left, next to the moon. Tap it and every screen switches to that place: the forecast, alerts, tides, air quality, sun,
 moon and map. The pin turns solid blue with a small "2", and Hourly shows the place name instead of "Your location". Tap
 it again to come back. Leaving the screen for a moment and returning does not forget the place you chose, but restarting the
 app starts on your own location again.

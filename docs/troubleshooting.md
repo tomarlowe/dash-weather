@@ -61,7 +61,7 @@ If you do not want to share location, open settings, set Location to "Fixed plac
 
 | What you see                           | What to do                                                                                      |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| No pin icon at the top right           | The second place is not set. Open settings and fill in both its latitude and longitude. Zero for both is treated as not set. |
+| No pin icon at the top left            | The second place is not set. Open settings and fill in both its latitude and longitude. Zero for both is treated as not set. |
 | The pin switched to a place I did not expect | Check the latitude and longitude in settings. West longitudes are negative, for example -71.0589 for Boston. |
 | Hourly says "Your location" but I tapped the pin | Tap it again. The solid blue pin with a "2" means the second place is showing.          |
 | The moon icon does nothing             | Dimming asks bridgething to change the Car Thing's backlight. On some setups that is not possible, and nothing is dimmed. Please [open an issue](https://github.com/tomarlowe/dash-weather/issues) and say what you saw. |

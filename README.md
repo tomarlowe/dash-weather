@@ -76,8 +76,8 @@ a real Car Thing. Screenshots from a real device will replace them once version 
   turn, or on another click. On the other three screens the dial click does nothing.
 - **Back button**: not used.
 - **Touch**: tap a pill along the top to switch screens.
-- **Pin icon** (top right, only when a second place is set): flips every screen between your location and the second place.
-- **Moon icon** (top right): dims or brightens the screen by hand.
+- **Pin icon** (top left, next to the moon, only when a second place is set): flips every screen between your location and the second place.
+- **Moon icon** (top left): dims or brightens the screen by hand.
 
 ## Other features
 

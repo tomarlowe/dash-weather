@@ -15,7 +15,8 @@ Not yet tried on a real device. Nothing below is ticked.
 
 - [ ] 0.2.0 installs over 0.1.0 and keeps your settings (units, clock, fixed place).
 - [ ] It opens on Hourly with real data within about 30 seconds.
-- [ ] The top strip shows five pills, the moon icon at the right end, and Hourly is highlighted.
+- [ ] The moon is fully visible and easy to tap, not covered by the dial.
+- [ ] The top strip shows five pills, the moon icon at the left end, and Hourly is highlighted.
 
 ### Buttons
 
@@ -66,7 +67,7 @@ Not yet tried on a real device. Nothing below is ticked.
 
 ### Second place
 
-- [ ] After setting a second place name, latitude and longitude in settings, a pin icon appears at the top right.
+- [ ] After setting a second place name, latitude and longitude in settings, a pin icon appears at the top left, next to the moon.
 - [ ] Tapping it switches every screen to that place, the pin turns solid blue with a "2", and Hourly shows the place name.
 - [ ] You never see the other place's weather for more than a moment while the new place loads.
 - [ ] Tapping again returns to your location.

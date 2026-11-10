@@ -20,7 +20,7 @@ New:
   a safety tool.
 - Radar loop: the last hour of radar plays on the Map, with the age of each frame. It can be turned off.
 - A second place: set a name and coordinates in settings, then tap the pin icon to flip every screen to that place.
-- A moon icon dims the screen by hand, and "Dim at night" does it from the sun's position at the place you are looking at.
+- A moon icon, at the top left because the dial covers the top right of the Car Thing, dims the screen by hand, and "Dim at night" does it from the sun's position at the place you are looking at.
 - Standby: after a quiet spell (1 to 30 minutes, off by default) the screen shows only the temperature, sky and chance of
   rain in white on black, with an optional clock. Any press or touch wakes it, and only wakes it.
 
