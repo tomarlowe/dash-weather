@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" width="800" height="340" role="img" aria-labelledby="t d">
+  <title id="t">How Dash Weather fits together</title>
+  <desc id="d">The app on the Car Thing talks to the bridgething daemon, which talks over Bluetooth to the companion app on the phone, which reaches public weather, alert, tide, radar and map services over the internet. Below, the app is made of screens, a data layer, pure logic and a platform layer.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#44505f"/>
+    </marker>
+  </defs>
+  <rect width="800" height="340" fill="#ffffff"/>
+  <g font-family="Roboto, Arial, Helvetica, sans-serif" fill="#1b1b1b" text-anchor="middle">
+    <text x="16" y="24" text-anchor="start" font-size="15" font-weight="700">Where the data goes</text>
+
+    <rect x="16" y="40" width="140" height="92" rx="14" fill="#E3EEFF" stroke="#2A5DB0" stroke-width="2"/>
+    <text x="86" y="78" font-size="15" font-weight="700">Dash Weather</text>
+    <text x="86" y="98" font-size="12.5">the app on</text>
+    <text x="86" y="114" font-size="12.5">the Car Thing</text>
+
+    <rect x="216" y="40" width="140" height="92" rx="14" fill="#E6F5E8" stroke="#2E7D3A" stroke-width="2"/>
+    <text x="286" y="78" font-size="15" font-weight="700">bridgething</text>
+    <text x="286" y="98" font-size="12.5">daemon on the</text>
+    <text x="286" y="114" font-size="12.5">Car Thing</text>
+
+    <rect x="416" y="40" width="150" height="92" rx="14" fill="#E6F5E8" stroke="#2E7D3A" stroke-width="2"/>
+    <text x="491" y="78" font-size="15" font-weight="700">bridgething app</text>
+    <text x="491" y="98" font-size="12.5">companion app</text>
+    <text x="491" y="114" font-size="12.5">on your phone</text>
+
+    <rect x="626" y="40" width="160" height="92" rx="14" fill="#FFF1D6" stroke="#B26A00" stroke-width="2"/>
+    <text x="706" y="62" font-size="13" font-weight="700">Public services</text>
+    <text x="706" y="79" font-size="11.5">Open-Meteo</text>
+    <text x="706" y="93" font-size="11.5">NWS alerts (US only)</text>
+    <text x="706" y="107" font-size="11.5">NOAA tides, RainViewer</text>
+    <text x="706" y="121" font-size="11.5">OpenStreetMap</text>
+
+    <line x1="158" y1="86" x2="214" y2="86" stroke="#44505f" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+    <line x1="358" y1="86" x2="414" y2="86" stroke="#44505f" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+    <line x1="568" y1="86" x2="624" y2="86" stroke="#44505f" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+    <text x="186" y="150" font-size="11.5" fill="#44505f">local link</text>
+    <text x="386" y="150" font-size="11.5" fill="#44505f">Bluetooth</text>
+    <text x="596" y="150" font-size="11.5" fill="#44505f">internet</text>
+
+    <text x="16" y="190" text-anchor="start" font-size="15" font-weight="700">Inside Dash Weather</text>
+
+    <rect x="16" y="204" width="180" height="84" rx="12" fill="#F1EDFF" stroke="#6A4FC4" stroke-width="2"/>
+    <text x="106" y="228" font-size="14" font-weight="700">Screens</text>
+    <text x="106" y="247" font-size="11.5">Hourly, Today, 5-Day,</text>
+    <text x="106" y="262" font-size="11.5">Sky &amp; Sea, Map, Standby</text>
+    <text x="106" y="277" font-size="11.5">(React)</text>
+
+    <rect x="216" y="204" width="180" height="84" rx="12" fill="#F1EDFF" stroke="#6A4FC4" stroke-width="2"/>
+    <text x="306" y="228" font-size="14" font-weight="700">Repo</text>
+    <text x="306" y="247" font-size="11.5">feeds and retries, two places,</text>
+    <text x="306" y="262" font-size="11.5">saved copy for a quick start</text>
+
+    <rect x="416" y="204" width="180" height="84" rx="12" fill="#F1EDFF" stroke="#6A4FC4" stroke-width="2"/>
+    <text x="506" y="228" font-size="14" font-weight="700">Pure logic</text>
+    <text x="506" y="247" font-size="11.5">rain soon, UV, alerts, tides,</text>
+    <text x="506" y="262" font-size="11.5">sun and moon, dial rules,</text>
+    <text x="506" y="277" font-size="11.5">screen light rules</text>
+
+    <rect x="616" y="204" width="170" height="84" rx="12" fill="#F1EDFF" stroke="#6A4FC4" stroke-width="2"/>
+    <text x="701" y="228" font-size="14" font-weight="700">Platform</text>
+    <text x="701" y="247" font-size="11.5">device, browser and</text>
+    <text x="701" y="262" font-size="11.5">simulator versions of</text>
+    <text x="701" y="277" font-size="11.5">the outside world</text>
+
+    <text x="16" y="322" text-anchor="start" font-size="12" fill="#44505f">Services only receive coordinates rounded to about 1 km, or map square numbers. See docs/privacy.md.</text>
+  </g>
+</svg>

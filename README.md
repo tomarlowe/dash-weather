@@ -139,7 +139,13 @@ address of the version zip into the companion app's "install from url or file" p
 - [Troubleshooting](docs/troubleshooting.md)
 - [Privacy](docs/privacy.md): what leaves the device
 - [Data sources, credits and terms](docs/data-sources.md)
+- [Architecture](docs/architecture.md)
+- [Design decisions](docs/design-decisions.md), and who made them
+- [Testing](docs/testing.md)
+- [Roadmap](docs/roadmap.md)
+- [FAQ](docs/faq.md)
 - [How this was built](docs/how-this-was-built.md)
+- [Contributing](CONTRIBUTING.md), [Code of conduct](CODE_OF_CONDUCT.md), [Security policy](SECURITY.md), [Third-party notices](THIRD_PARTY_NOTICES.md)
 - [Developer guide](docs/developer-guide.md): build it, change it, test it, ship it
 - [Device test checklist](docs/device-test-checklist.md)
 - [Changelog](apps/dash-weather/CHANGELOG.md)
