@@ -39,13 +39,14 @@ async function pickPlatform(): Promise<Platform> {
 }
 
 async function boot() {
+  const params = new URLSearchParams(window.location.search);
   const platform = await pickPlatform();
   const repo = new Repo(platform);
   const loader = new TileLoader(platform);
   await repo.start();
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App ctx={{ repo, loader }} />
+      <App ctx={{ repo, loader, backlight: platform.backlight, startInStandby: platform.kind === 'sim' && params.get('standby') === 'now' }} />
     </StrictMode>,
   );
 }

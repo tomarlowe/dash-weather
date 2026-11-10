@@ -9,6 +9,20 @@ export interface FetchOptions {
 
 export type PositionResult = { ok: true; coord: Coord } | { ok: false; error: string };
 
+// the device's screen light. level and effective run from 0 (dark) to 1 (full)
+export interface BacklightState {
+  mode: 'auto' | 'manual';
+  level: number;
+  effective: number;
+}
+
+export interface Backlight {
+  // null when the device cannot say, as in a plain browser
+  get(): Promise<BacklightState | null>;
+  setAuto(): Promise<void>;
+  setManual(level: number): Promise<void>;
+}
+
 // everything the app needs from the outside world. the device, a plain browser and the offline
 // simulator each provide one, so the rest of the code never knows which it is running on
 export interface Platform {
@@ -22,9 +36,11 @@ export interface Platform {
   getPosition(): Promise<PositionResult>;
   // how the launcher is reached on this device, so the app can warn when "m" is taken
   launcherGesture(): Promise<string | null>;
+  readonly backlight: Backlight;
 }
 
-export const USER_AGENT = 'DashWeather/0.1 (bridgething app for the Spotify Car Thing)';
+// the weather service asks for a way to reach the maker, so the project page is in it
+export const USER_AGENT = 'DashWeather/0.2 (https://github.com/tomarlowe/dash-weather)';
 
 // no answer came back at all: phone not connected, phone offline, timed out
 export class NoAnswerError extends Error {}

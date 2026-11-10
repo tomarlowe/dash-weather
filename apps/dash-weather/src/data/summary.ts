@@ -1,3 +1,4 @@
+import { rainSoon } from './conditions';
 import { hourLabel } from './format';
 import type { Weather } from './types';
 import { isWet, skyOf } from './wmo';
@@ -21,6 +22,9 @@ export function advice(w: Weather, nowS: number, clock24: boolean): string {
     const dry = next.find(h => !wet(h));
     first = dry ? `${kindOf(w.current.code)} until ${hourLabel(dry.t, w.utcOffsetS, clock24)}.` : `${kindOf(w.current.code)} all day.`;
   } else {
+    const soon = rainSoon(w, nowS);
+    // with rain this close the line says only that, it has to fit on one line of the card
+    if (soon) return `${soon.kind === 'snow' ? 'Snow' : 'Rain'} starts in about ${soon.inMin} min.`;
     const coming = next.find(wet);
     first = coming
       ? `${kindOf(coming.code)} likely from ${hourLabel(coming.t, w.utcOffsetS, clock24)}.`

@@ -186,10 +186,33 @@ export const WavesGlyph = (p: G) => (
     <path d="M2 16c2.5-3 4.5-3 7 0s4.5 3 7 0 4.5-3 6 0" />
   </Line>
 );
-export const PinGlyph = (p: G) => (
+export const PinGlyph = ({ filled = false, ...p }: G & { filled?: boolean }) => (
   <Line {...p}>
-    <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z" />
-    <circle cx="12" cy="9.5" r="2.5" />
+    <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z" fill={filled ? 'currentColor' : 'none'} />
+    <circle cx="12" cy="9.5" r="2.5" fill={filled ? '#000000' : 'none'} />
+  </Line>
+);
+export const MoonGlyph = ({ filled = false, ...p }: G & { filled?: boolean }) => (
+  <Line {...p}>
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill={filled ? 'currentColor' : 'none'} />
+  </Line>
+);
+export const WarnGlyph = (p: G) => (
+  <Line {...p}>
+    <path d="M12 3 22 20H2L12 3z" />
+    <path d="M12 10v4.5M12 17.3v.2" />
+  </Line>
+);
+// the dial being pressed, and the dial being turned
+export const PressGlyph = (p: G) => (
+  <Line {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="3.5" fill="currentColor" />
+  </Line>
+);
+export const RotGlyph = (p: G) => (
+  <Line {...p}>
+    <path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5" />
   </Line>
 );
 export const RainCloudGlyph = (p: G) => (

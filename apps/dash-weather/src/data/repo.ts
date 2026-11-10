@@ -1,16 +1,22 @@
 import { fetchJson, NoAnswerError, type Platform } from '../platform/types';
+import { alertsUrl, inUs, parseAlerts } from './alerts';
 import { nearestStations, parsePredictions, parseStations, predictionsUrl, STATIONS_URL } from './noaa';
 import { airQualityUrl, forecastUrl, parseAirQuality, parseForecast } from './openmeteo';
 import { parseRadarIndex, RADAR_INDEX_URL } from './radar';
 import { localDayStart } from './format';
-import type { Aqi, Coord, Feed, RadarIndex, Settings, TideStation, Tides, Weather } from './types';
+import type { Alerts, Aqi, Coord, Feed, RadarIndex, Settings, TideStation, Tides, Weather } from './types';
 import { DEFAULT_SETTINGS } from './types';
 import { haversineKm } from './units';
 
-export type FeedKey = 'weather' | 'aqi' | 'tides' | 'radar';
+export type FeedKey = 'weather' | 'aqi' | 'tides' | 'radar' | 'alerts';
 
 // seconds before a feed is fetched again
-export const TTL: Record<FeedKey, number> = { weather: 900, aqi: 1800, tides: 6 * 3600, radar: 300 };
+export const TTL: Record<FeedKey, number> = { weather: 900, aqi: 1800, tides: 6 * 3600, radar: 300, alerts: 300 };
+
+export type PlaceId = 'here' | 'away';
+
+// feeds that belong to a place. radar is the same everywhere
+const PLACE_KEYS: FeedKey[] = ['weather', 'aqi', 'tides', 'alerts'];
 
 // a feed this old is shown as out of date
 export const STALE_S = 45 * 60;
@@ -28,23 +34,39 @@ export const retryAfterS = (fails: number, noAnswer: boolean) =>
 export interface RepoState {
   settings: Settings;
   nowS: number;
+  // the place on screen: the phone or fixed place, or the second place
   coord: Coord | null;
-  coordSource: 'phone' | 'manual' | 'cached' | 'none';
+  coordSource: 'phone' | 'manual' | 'cached' | 'second' | 'none';
   coordError: string | null;
+  // the phone or fixed place, kept even while the second place is shown
+  home: Coord | null;
+  place: PlaceId;
+  // the name of the second place while it is shown
+  placeName: string | null;
   weather: Feed<Weather>;
   aqi: Feed<Aqi>;
   tides: Feed<Tides>;
   // set when no station is close enough
   tidesNone: { name: string; distKm: number } | null;
   radar: Feed<RadarIndex>;
+  alerts: Feed<Alerts>;
 }
 
 const idle = <T>(): Feed<T> => ({ data: null, status: 'idle', error: null });
 
+const STANDBY_CHOICES = [1, 2, 5, 10, 30];
+
+function validCoord(lat: number, lon: number): boolean {
+  return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0);
+}
+
 export function parseSettings(cfg: Record<string, string>): Settings {
   const lat = Number(cfg.manual_lat);
   const lon = Number(cfg.manual_lon);
-  const validManual = Number.isFinite(lat) && Number.isFinite(lon) && !(lat === 0 && lon === 0);
+  const validManual = validCoord(lat, lon);
+  const lat2 = Number(cfg.place2_lat);
+  const lon2 = Number(cfg.place2_lon);
+  const minutes = Number(cfg.standby_minutes);
   const tpl = cfg.tile_url ?? '';
   const okTpl = /^https:\/\/\S*\{z\}\S*\{x\}\S*\{y\}\S*$/.test(tpl);
   return {
@@ -55,6 +77,14 @@ export function parseSettings(cfg: Record<string, string>): Settings {
     tileUrl: okTpl ? tpl : '',
     darken: cfg.map_darken !== 'false',
     dialReverse: cfg.dial_reverse === 'true',
+    dimNight: cfg.dim_night === 'true',
+    animateRadar: cfg.animate_radar !== 'false',
+    standbyEnabled: cfg.standby_enabled === 'true',
+    standbyMinutes: STANDBY_CHOICES.includes(minutes) ? minutes : 5,
+    standbyClock: cfg.standby_clock === 'true',
+    place2: validCoord(lat2, lon2)
+      ? { name: (cfg.place2_name ?? '').trim().slice(0, 40) || 'Second place', coord: { lat: lat2, lon: lon2 } }
+      : null,
   };
 }
 
@@ -65,24 +95,44 @@ interface Meta {
   busy: boolean;
 }
 
-const KEYS: FeedKey[] = ['weather', 'aqi', 'tides', 'radar'];
+const KEYS: FeedKey[] = ['weather', 'aqi', 'tides', 'radar', 'alerts'];
+
+const blankMeta = (): Meta => ({ at: 0, fails: 0, noAnswer: false, busy: false });
+
+// what the second place and the first place keep while the other is shown
+interface Snap {
+  coord: Coord;
+  weather: Feed<Weather>;
+  aqi: Feed<Aqi>;
+  tides: Feed<Tides>;
+  tidesNone: RepoState['tidesNone'];
+  alerts: Feed<Alerts>;
+  meta: Record<FeedKey, Meta>;
+}
+
+type StationCache = { around: Coord; list: Array<TideStation & { distKm: number }> };
 
 export class Repo {
   private state: RepoState;
   private subs = new Set<() => void>();
   private meta: Record<FeedKey, Meta> = {
-    weather: { at: 0, fails: 0, noAnswer: false, busy: false },
-    aqi: { at: 0, fails: 0, noAnswer: false, busy: false },
-    tides: { at: 0, fails: 0, noAnswer: false, busy: false },
-    radar: { at: 0, fails: 0, noAnswer: false, busy: false },
+    weather: blankMeta(),
+    aqi: blankMeta(),
+    tides: blankMeta(),
+    radar: blankMeta(),
+    alerts: blankMeta(),
   };
   private loc = { at: 0, fails: 0 };
   private timer: ReturnType<typeof setInterval> | null = null;
   private offConfig: (() => void) | null = null;
   private ticking = false;
   private rawConfig: Record<string, string> = {};
-  // the point the cached station list was searched around
-  private stationCache: { around: Coord; list: Array<TideStation & { distKm: number }> } | null = null;
+  // the point the cached station list was searched around, for each place
+  private stationCache: Partial<Record<PlaceId, StationCache>> = {};
+  private homeSource: RepoState['coordSource'] = 'none';
+  private snaps: Record<PlaceId, Snap | null> = { here: null, away: null };
+  // moves on every change of place, so a reply meant for the other place is dropped
+  private gen = 0;
 
   constructor(private p: Platform) {
     this.state = {
@@ -91,11 +141,15 @@ export class Repo {
       coord: null,
       coordSource: 'none',
       coordError: null,
+      home: null,
+      place: 'here',
+      placeName: null,
       weather: idle(),
       aqi: idle(),
       tides: idle(),
       tidesNone: null,
       radar: idle(),
+      alerts: idle(),
     };
   }
 
@@ -105,6 +159,9 @@ export class Repo {
   };
 
   getSnapshot = (): RepoState => this.state;
+
+  // the clock for screens that must be right to the minute, since nowS only moves every 30 seconds
+  now = (): number => this.p.nowS();
 
   private set(patch: Partial<RepoState>) {
     this.state = { ...this.state, ...patch };
@@ -126,6 +183,42 @@ export class Repo {
     this.timer = null;
   }
 
+  // switches between the phone's place and the second place. false when there is nothing to switch to
+  switchPlace(to: PlaceId): boolean {
+    const s = this.state;
+    if (to === s.place) return true;
+    const target = to === 'away' ? s.settings.place2?.coord ?? null : s.home;
+    if (!target) return false;
+    if (s.coord) this.snaps[s.place] = this.snapshot(s.coord);
+    const snap = this.snaps[to];
+    this.activate(to, target, snap && haversineKm(snap.coord.lat, snap.coord.lon, target.lat, target.lon) <= MOVED_KM ? snap : null);
+    void this.tick();
+    return true;
+  }
+
+  private snapshot(coord: Coord): Snap {
+    const s = this.state;
+    const meta = {} as Record<FeedKey, Meta>;
+    for (const k of KEYS) meta[k] = { ...this.meta[k], busy: false };
+    return { coord, weather: s.weather, aqi: s.aqi, tides: s.tides, tidesNone: s.tidesNone, alerts: s.alerts, meta };
+  }
+
+  private activate(to: PlaceId, coord: Coord, snap: Snap | null) {
+    this.gen++;
+    for (const k of PLACE_KEYS) this.meta[k] = snap ? { ...snap.meta[k], busy: false } : blankMeta();
+    this.set({
+      place: to,
+      placeName: to === 'away' ? this.state.settings.place2?.name ?? null : null,
+      coord,
+      coordSource: to === 'away' ? 'second' : this.homeSource,
+      weather: snap?.weather ?? idle(),
+      aqi: snap?.aqi ?? idle(),
+      tides: snap?.tides ?? idle(),
+      tidesNone: snap?.tidesNone ?? null,
+      alerts: snap?.alerts ?? idle(),
+    });
+  }
+
   private async onConfig(key: string, value: string | null) {
     if (value === null) delete this.rawConfig[key];
     else this.rawConfig[key] = value;
@@ -135,7 +228,15 @@ export class Repo {
     const place = (s: Settings) => `${s.manual?.lat},${s.manual?.lon}`;
     if (place(before) !== place(settings)) {
       this.loc.at = 0;
-      for (const k of KEYS) if (k !== 'radar') this.meta[k].at = 0;
+      if (this.state.place === 'here') for (const k of PLACE_KEYS) this.meta[k].at = 0;
+    }
+    const second = (s: Settings) => (s.place2 ? `${s.place2.coord.lat},${s.place2.coord.lon},${s.place2.name}` : '');
+    if (second(before) !== second(settings)) {
+      this.snaps.away = null;
+      if (this.state.place === 'away') {
+        if (settings.place2) this.activate('away', settings.place2.coord, null);
+        else if (this.state.home) this.activate('here', this.state.home, this.snaps.here);
+      }
     }
     if (before.tideStation !== settings.tideStation) this.meta.tides.at = 0;
     await this.tick();
@@ -152,21 +253,25 @@ export class Repo {
     };
     const [loc, wx, aqi, tide, tst] = await Promise.all([
       read<Coord>('loc1'),
-      read<Weather>('wx1'),
+      read<Weather>('wx2'),
       read<Aqi>('aqi1'),
       read<{ tides: Tides | null; none: RepoState['tidesNone'] }>('tide1'),
-      read<{ around: Coord; list: Array<TideStation & { distKm: number }> }>('tst1'),
+      read<StationCache>('tst1'),
     ]);
     const patch: Partial<RepoState> = {};
     if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lon)) {
       patch.coord = loc;
+      patch.home = loc;
       patch.coordSource = 'cached';
+      this.homeSource = 'cached';
     }
-    if (wx?.current && wx.hours?.length && wx.days?.length) patch.weather = { data: wx, status: 'ok', error: null };
+    if (wx?.current && wx.hours?.length && wx.days?.length && Array.isArray(wx.minutes)) {
+      patch.weather = { data: wx, status: 'ok', error: null };
+    }
     if (aqi && Number.isFinite(aqi.us)) patch.aqi = { data: aqi, status: 'ok', error: null };
     if (tide?.tides?.events?.length) patch.tides = { data: tide.tides, status: 'ok', error: null };
     if (tide?.none) patch.tidesNone = tide.none;
-    if (tst?.list?.length) this.stationCache = tst;
+    if (tst?.list?.length) this.stationCache.here = tst;
     this.set(patch);
   }
 
@@ -197,6 +302,11 @@ export class Repo {
       if (!this.state.coord) await located;
       for (const key of KEYS) {
         if (key !== 'radar' && !this.state.coord) continue;
+        // alerts come from a US service, so nothing is asked about a place outside the US
+        if (key === 'alerts' && !inUs(this.state.coord!)) {
+          if (this.state.alerts.status !== 'idle') this.set({ alerts: idle() });
+          continue;
+        }
         if (this.due(key)) void this.run(key);
       }
     } finally {
@@ -207,9 +317,8 @@ export class Repo {
   private async updateLocation() {
     const { manual } = this.state.settings;
     if (manual) {
-      if (this.state.coordSource !== 'manual' || this.state.coord?.lat !== manual.lat || this.state.coord?.lon !== manual.lon) {
-        this.setCoord(manual, 'manual');
-      }
+      const h = this.state.home;
+      if (this.homeSource !== 'manual' || h?.lat !== manual.lat || h?.lon !== manual.lon) this.setHome(manual, 'manual');
       return;
     }
     const now = this.p.nowS();
@@ -219,7 +328,7 @@ export class Repo {
     const r = await this.p.getPosition();
     if (r.ok) {
       this.loc.fails = 0;
-      this.setCoord(r.coord, 'phone');
+      this.setHome(r.coord, 'phone');
       this.save('loc1', r.coord);
     } else {
       this.loc.fails++;
@@ -227,26 +336,33 @@ export class Repo {
     }
   }
 
-  private setCoord(c: Coord, source: RepoState['coordSource']) {
+  private setHome(c: Coord, source: RepoState['coordSource']) {
+    this.homeSource = source;
+    if (this.state.place === 'away') {
+      this.set({ home: c, coordError: null });
+      return;
+    }
     const prev = this.state.coord;
-    this.set({ coord: c, coordSource: source, coordError: null });
+    this.set({ home: c, coord: c, coordSource: source, coordError: null });
     if (prev && haversineKm(prev.lat, prev.lon, c.lat, c.lon) > MOVED_KM) {
-      this.meta.weather.at = 0;
-      this.meta.aqi.at = 0;
-      this.meta.tides.at = 0;
+      for (const k of PLACE_KEYS) this.meta[k].at = 0;
     }
   }
 
   private async run(key: FeedKey) {
     const m = this.meta[key];
+    const gen = this.gen;
+    // a reply that comes back after the place changed belongs to the other place
+    const gone = () => key !== 'radar' && gen !== this.gen;
     m.busy = true;
     m.at = this.p.nowS();
     const feed = this.state[key] as Feed<unknown>;
     if (feed.data === null) this.set({ [key]: { data: null, status: 'loading', error: null } } as Partial<RepoState>);
     try {
-      if (key === 'weather') await this.fetchWeather();
-      else if (key === 'aqi') await this.fetchAqi();
-      else if (key === 'tides') await this.fetchTides();
+      if (key === 'weather') await this.fetchWeather(gone);
+      else if (key === 'aqi') await this.fetchAqi(gone);
+      else if (key === 'tides') await this.fetchTides(gone);
+      else if (key === 'alerts') await this.fetchAlerts(gone);
       else await this.fetchRadar();
       m.fails = 0;
       m.noAnswer = false;
@@ -254,26 +370,30 @@ export class Repo {
       m.fails++;
       const error = e instanceof Error ? e.message : 'Update failed';
       m.noAnswer = e instanceof NoAnswerError;
-      const cur = this.state[key] as Feed<unknown>;
-      this.set({ [key]: { data: cur.data, status: 'error', error } } as Partial<RepoState>);
+      if (!gone()) {
+        const cur = this.state[key] as Feed<unknown>;
+        this.set({ [key]: { data: cur.data, status: 'error', error } } as Partial<RepoState>);
+      }
     } finally {
       m.busy = false;
     }
   }
 
-  private async fetchWeather() {
+  private async fetchWeather(gone: () => boolean) {
     const coord = this.state.coord!;
     const json = await fetchJson(this.p, forecastUrl(coord));
     const data = parseForecast(json, coord, this.p.nowS());
+    if (gone()) return;
     this.set({ weather: { data, status: 'ok', error: null } });
-    this.save('wx1', data);
+    if (this.state.place === 'here') this.save('wx2', data);
   }
 
-  private async fetchAqi() {
+  private async fetchAqi(gone: () => boolean) {
     const json = await fetchJson(this.p, airQualityUrl(this.state.coord!));
     const data = parseAirQuality(json, this.p.nowS());
+    if (gone()) return;
     this.set({ aqi: { data, status: 'ok', error: null } });
-    this.save('aqi1', data);
+    if (this.state.place === 'here') this.save('aqi1', data);
   }
 
   private async fetchRadar() {
@@ -281,30 +401,39 @@ export class Repo {
     this.set({ radar: { data, status: 'ok', error: null } });
   }
 
-  private async candidates(coord: Coord): Promise<Array<TideStation & { distKm: number }>> {
+  private async fetchAlerts(gone: () => boolean) {
+    const json = await fetchJson(this.p, alertsUrl(this.state.coord!), { headers: { Accept: 'application/geo+json' } });
+    const data = parseAlerts(json, this.p.nowS());
+    if (gone()) return;
+    this.set({ alerts: { data, status: 'ok', error: null } });
+  }
+
+  private async candidates(coord: Coord, place: PlaceId): Promise<Array<TideStation & { distKm: number }>> {
     const forced = this.state.settings.tideStation;
     if (forced) return [{ id: forced, name: `Station ${forced}`, lat: NaN, lon: NaN, distKm: NaN }];
-    const c = this.stationCache;
+    const c = this.stationCache[place];
     if (c && haversineKm(c.around.lat, c.around.lon, coord.lat, coord.lon) < STATION_REFRESH_KM) return c.list;
     // the full list is large, so it is fetched once and only the nearest few are kept
     const all = parseStations(await fetchJson(this.p, STATIONS_URL, { timeoutMs: 90000 }));
     const list = nearestStations(all, coord, 5);
-    this.stationCache = { around: coord, list };
-    this.save('tst1', this.stationCache);
+    this.stationCache[place] = { around: coord, list };
+    if (place === 'here') this.save('tst1', this.stationCache.here);
     return list;
   }
 
-  private async fetchTides() {
+  private async fetchTides(gone: () => boolean) {
     const coord = this.state.coord!;
+    const place = this.state.place;
     const now = this.p.nowS();
-    const list = await this.candidates(coord);
+    const list = await this.candidates(coord, place);
+    if (gone()) return;
     const forced = !!this.state.settings.tideStation;
     const near = list.filter(s => forced || s.distKm <= MAX_TIDE_KM);
     if (!near.length) {
       const nearest = list[0]!;
       const none = { name: nearest.name, distKm: nearest.distKm };
       this.set({ tides: { data: null, status: 'ok', error: null }, tidesNone: none });
-      this.save('tide1', { tides: null, none });
+      if (place === 'here') this.save('tide1', { tides: null, none });
       return;
     }
     const start = localDayStart(now, this.state.weather.data?.utcOffsetS ?? 0) - 86400;
@@ -312,9 +441,10 @@ export class Repo {
     for (const s of near.slice(0, 3)) {
       try {
         const events = parsePredictions(await fetchJson(this.p, predictionsUrl(s.id, start, start + 4 * 86400)));
+        if (gone()) return;
         const data: Tides = { fetchedAt: now, station: s, distKm: s.distKm, events };
         this.set({ tides: { data, status: 'ok', error: null }, tidesNone: null });
-        this.save('tide1', { tides: data, none: null });
+        if (place === 'here') this.save('tide1', { tides: data, none: null });
         return;
       } catch (e) {
         last = e;

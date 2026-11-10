@@ -64,5 +64,13 @@ export function webPlatform(opts: { config?: Record<string, string>; coord?: Coo
     async launcherGesture() {
       return null;
     },
+
+    backlight: {
+      async get() {
+        return null;
+      },
+      async setAuto() {},
+      async setManual() {},
+    },
   };
 }

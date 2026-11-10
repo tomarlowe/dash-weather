@@ -2,7 +2,7 @@
 // SIMULATED checks: the platform answers from fixtures. these prove the refresh logic, not the live services.
 
 import { describe, expect, test } from 'bun:test';
-import type { Platform } from '../platform/types';
+import { USER_AGENT, type Platform } from '../platform/types';
 import { SIM_COORD, SIM_NOW_S } from '../sim/fixtures';
 import { simPlatform } from '../sim/platform';
 import { parseSettings, Repo, retryAfterS } from './repo';
@@ -108,7 +108,7 @@ describe('repo with the simulated platform', () => {
     await until(first, settled);
     await new Promise(r => setTimeout(r, 20));
     first.stop();
-    expect([...store.keys()].sort()).toEqual(['aqi1', 'loc1', 'tide1', 'tst1', 'wx1']);
+    expect([...store.keys()].sort()).toEqual(['aqi1', 'loc1', 'tide1', 'tst1', 'wx2']);
 
     const second = make('fail=all', withStore);
     await second.start();
@@ -307,5 +307,272 @@ describe('what the screens read', () => {
     expect(bars[2]).toEqual({ top: 47.4, height: 52.6 });
     expect(bars[3]).toEqual({ top: 21.1, height: 73.7 });
     expect(bars[4]).toEqual({ top: 0, height: 73.7 });
+  });
+});
+
+describe('0.2.0 settings', () => {
+  test('defaults: nothing new is switched on except the radar loop', () => {
+    const s = parseSettings({});
+    expect(s.dimNight).toBe(false);
+    expect(s.animateRadar).toBe(true);
+    expect(s.standbyEnabled).toBe(false);
+    expect(s.standbyMinutes).toBe(5);
+    expect(s.standbyClock).toBe(false);
+    expect(s.dialReverse).toBe(false);
+    expect(s.place2).toBeNull();
+  });
+  test('values', () => {
+    const s = parseSettings({
+      dim_night: 'true',
+      animate_radar: 'false',
+      standby_enabled: 'true',
+      standby_minutes: '10',
+      standby_clock: 'true',
+      dial_reverse: 'true',
+      place2_name: '  Boston, MA ',
+      place2_lat: '42.36',
+      place2_lon: '-71.06',
+    });
+    expect(s.dimNight).toBe(true);
+    expect(s.animateRadar).toBe(false);
+    expect(s.standbyEnabled).toBe(true);
+    expect(s.standbyMinutes).toBe(10);
+    expect(s.standbyClock).toBe(true);
+    expect(s.dialReverse).toBe(true);
+    expect(s.place2).toEqual({ name: 'Boston, MA', coord: { lat: 42.36, lon: -71.06 } });
+  });
+  test('standby time only takes the offered choices', () => {
+    for (const m of [1, 2, 5, 10, 30]) expect(parseSettings({ standby_minutes: String(m) }).standbyMinutes).toBe(m);
+    for (const m of ['0', '3', '7', '60', 'abc', '']) expect(parseSettings({ standby_minutes: m }).standbyMinutes).toBe(5);
+  });
+  test('the second place needs real coordinates, and a name is made up if missing or long', () => {
+    expect(parseSettings({ place2_lat: '42.36', place2_lon: '-71.06' }).place2!.name).toBe('Second place');
+    expect(parseSettings({ place2_name: 'x'.repeat(80), place2_lat: '1', place2_lon: '2' }).place2!.name.length).toBe(40);
+    for (const [lat, lon] of [
+      ['91', '0'],
+      ['0', '181'],
+      ['abc', '5'],
+      ['', ''],
+      ['0', '0'],
+    ] as const) {
+      expect(parseSettings({ place2_name: 'X', place2_lat: lat, place2_lon: lon }).place2).toBeNull();
+    }
+  });
+});
+
+describe('two places', () => {
+  const two = 'place2_name=Boston%2C%20MA&place2_lat=42.36&place2_lon=-71.06';
+  const dry = (s: ReturnType<Repo['getSnapshot']>) => s.weather.data?.days[0]?.precip;
+
+  test('switching shows the second place and keeps the phone place', async () => {
+    const repo = make(two);
+    await repo.start();
+    await until(repo, settled);
+    expect(repo.getSnapshot().place).toBe('here');
+    expect(dry(repo.getSnapshot())).toBe(40);
+    expect(repo.switchPlace('away')).toBe(true);
+    await until(repo, s => s.weather.status === 'ok');
+    const s = repo.getSnapshot();
+    repo.stop();
+    expect(s.place).toBe('away');
+    expect(s.placeName).toBe('Boston, MA');
+    expect(s.coord).toEqual({ lat: 42.36, lon: -71.06 });
+    expect(s.coordSource).toBe('second');
+    expect(s.home).toEqual(SIM_COORD);
+    // the made-up second place is the dry one
+    expect(dry(s)).toBe(0);
+  });
+
+  test('switching back is instant and brings back the first place', async () => {
+    const repo = make(two);
+    await repo.start();
+    await until(repo, settled);
+    repo.switchPlace('away');
+    await until(repo, s => dry(s) === 0);
+    expect(repo.switchPlace('here')).toBe(true);
+    // no waiting: the first place's data was kept
+    const s = repo.getSnapshot();
+    repo.stop();
+    expect(s.place).toBe('here');
+    expect(s.placeName).toBeNull();
+    expect(s.coord).toEqual(SIM_COORD);
+    expect(s.coordSource).toBe('phone');
+    expect(dry(s)).toBe(40);
+  });
+
+  test('switching to where you already are does nothing', async () => {
+    const repo = make(two);
+    await repo.start();
+    await until(repo, settled);
+    const before = repo.getSnapshot();
+    expect(repo.switchPlace('here')).toBe(true);
+    repo.stop();
+    expect(repo.getSnapshot()).toBe(before);
+  });
+
+  test('with no second place set there is nothing to switch to', async () => {
+    const repo = make();
+    await repo.start();
+    await until(repo, settled);
+    expect(repo.switchPlace('away')).toBe(false);
+    repo.stop();
+    expect(repo.getSnapshot().place).toBe('here');
+  });
+
+  test('a late reply for the place you left never lands on the place you are in', async () => {
+    const repo = make('slow=60&' + two);
+    await repo.start();
+    await until(repo, s => s.weather.status === 'ok');
+    // ask for the second place and go straight back while its replies are still on the way
+    repo.switchPlace('away');
+    repo.switchPlace('here');
+    await new Promise(r => setTimeout(r, 400));
+    const s = repo.getSnapshot();
+    repo.stop();
+    expect(s.place).toBe('here');
+    expect(s.coord).toEqual(SIM_COORD);
+    expect(dry(s)).toBe(40);
+  });
+
+  test('only the phone place is saved for the next start', async () => {
+    const store = new Map<string, string>();
+    const withStore = (p: Platform): Platform => ({
+      ...p,
+      storeGet: async k => store.get(k) ?? null,
+      storePut: async (k, v) => void store.set(k, v),
+    });
+    const repo = make(two, withStore);
+    await repo.start();
+    await until(repo, settled);
+    repo.switchPlace('away');
+    await until(repo, s => dry(s) === 0 && s.aqi.status === 'ok' && s.tides.status !== 'idle');
+    await new Promise(r => setTimeout(r, 30));
+    repo.stop();
+    const saved = JSON.parse(store.get('wx2')!);
+    expect(saved.days[0].precip).toBe(40);
+    expect(JSON.parse(store.get('loc1')!)).toEqual(SIM_COORD);
+  });
+
+  test('taking the second place out of the settings while it is shown returns to the first', async () => {
+    let push: (k: string, v: string | null) => void = () => {};
+    const repo = make(two, p => ({
+      ...p,
+      onConfig: cb => {
+        push = cb;
+        return () => {};
+      },
+    }));
+    await repo.start();
+    await until(repo, settled);
+    repo.switchPlace('away');
+    await until(repo, s => dry(s) === 0);
+    push('place2_lat', null);
+    await until(repo, s => s.place === 'here');
+    const s = repo.getSnapshot();
+    repo.stop();
+    expect(s.coord).toEqual(SIM_COORD);
+    expect(s.settings.place2).toBeNull();
+  });
+
+  test('changing the second place while it is shown loads the new one', async () => {
+    let push: (k: string, v: string | null) => void = () => {};
+    const repo = make(two, p => ({
+      ...p,
+      onConfig: cb => {
+        push = cb;
+        return () => {};
+      },
+    }));
+    await repo.start();
+    await until(repo, settled);
+    repo.switchPlace('away');
+    await until(repo, s => dry(s) === 0);
+    push('place2_name', 'Portland, ME');
+    await until(repo, s => s.placeName === 'Portland, ME');
+    expect(repo.getSnapshot().place).toBe('away');
+    repo.stop();
+  });
+});
+
+describe('alerts are asked only where they can exist', () => {
+  const recorded = () => {
+    const urls: string[] = [];
+    const wrap = (p: Platform): Platform => ({
+      ...p,
+      fetchBytes: async (url, o) => {
+        urls.push(url);
+        return p.fetchBytes(url, o);
+      },
+    });
+    return { urls, wrap };
+  };
+  const alertUrls = (urls: string[]) => urls.filter(u => u.startsWith('https://api.weather.gov'));
+
+  test('a us place is asked, with the place rounded to two decimals, and the answer is kept', async () => {
+    const { urls, wrap } = recorded();
+    const repo = make('alert=1', wrap);
+    await repo.start();
+    await until(repo, s => s.alerts.status === 'ok');
+    const s = repo.getSnapshot();
+    repo.stop();
+    expect(alertUrls(urls)).toEqual(['https://api.weather.gov/alerts/active?point=40.71,-74.01']);
+    expect(s.alerts.data!.items.map(i => i.event)).toEqual(['Flood Watch', 'Wind Advisory']);
+  });
+
+  test('a place outside the us is never sent to the alerts service', async () => {
+    const { urls, wrap } = recorded();
+    const repo = make('alert=1&lat=51.5&lon=-0.12', wrap);
+    await repo.start();
+    await until(repo, settled);
+    await new Promise(r => setTimeout(r, 50));
+    const s = repo.getSnapshot();
+    repo.stop();
+    expect(alertUrls(urls)).toEqual([]);
+    expect(s.alerts.status).toBe('idle');
+  });
+
+  test('a failing alerts service does not hurt the weather', async () => {
+    const repo = make('alert=1&fail=alerts');
+    await repo.start();
+    await until(repo, s => s.alerts.status === 'error' && settled(s));
+    const s = repo.getSnapshot();
+    repo.stop();
+    expect(s.alerts.data).toBeNull();
+    expect(s.weather.status).toBe('ok');
+  });
+
+  test('the second place is asked for its own alerts at its own rounded point', async () => {
+    const { urls, wrap } = recorded();
+    const repo = make('alert=1&place2_name=Boston&place2_lat=42.3601&place2_lon=-71.0589', wrap);
+    await repo.start();
+    await until(repo, s => s.alerts.status === 'ok');
+    repo.switchPlace('away');
+    await until(repo, s => s.place === 'away' && s.alerts.status === 'ok');
+    repo.stop();
+    expect(alertUrls(urls)).toContain('https://api.weather.gov/alerts/active?point=42.36,-71.06');
+  });
+
+  test('a second place outside the us shows no alerts and asks for none', async () => {
+    const { urls, wrap } = recorded();
+    const repo = make('alert=1&place2_name=London&place2_lat=51.5&place2_lon=-0.12', wrap);
+    await repo.start();
+    await until(repo, s => s.alerts.status === 'ok');
+    const before = alertUrls(urls).length;
+    repo.switchPlace('away');
+    await until(repo, s => s.place === 'away' && s.weather.status === 'ok');
+    await new Promise(r => setTimeout(r, 50));
+    const s = repo.getSnapshot();
+    expect(s.alerts.status).toBe('idle');
+    expect(alertUrls(urls).length).toBe(before);
+    // and coming home brings the first place's alerts straight back
+    repo.switchPlace('here');
+    const home = repo.getSnapshot();
+    repo.stop();
+    expect(home.alerts.data!.items.length).toBe(2);
+  });
+
+  test('the identity sent with requests names the app and a contact page, and no person', () => {
+    expect(USER_AGENT).toMatch(/^DashWeather\/\d+\.\d+ \(https:\/\/github\.com\/tomarlowe\/dash-weather\)$/);
+    expect(USER_AGENT).not.toMatch(/@/);
   });
 });

@@ -23,12 +23,26 @@ export const WEEK_PALS: Pal[] = [YELLOW, BLUE, LAVENDER, SALMON, GREEN];
 
 export type ScreenId = 'hourly' | 'today' | 'map' | 'week' | 'skysea';
 
+// the order of the pills is also the order the dial walks through, and the recessed button is the last
 export const SCREENS: Array<{ id: ScreenId; label: string; bg: string; fg: string; key: string }> = [
   { id: 'hourly', label: 'Hourly', bg: '#8AB4F8', fg: '#0A2A5E', key: '1' },
   { id: 'today', label: 'Today', bg: '#FFD966', fg: '#3B2A00', key: '2' },
-  { id: 'map', label: 'Map', bg: '#7BE0A0', fg: '#003820', key: '3' },
-  { id: 'week', label: '5-Day', bg: '#CBB8FF', fg: '#2A1A63', key: '4' },
-  { id: 'skysea', label: 'Sky & Sea', bg: '#6FE0D0', fg: '#00332D', key: 'm' },
+  { id: 'week', label: '5-Day', bg: '#CBB8FF', fg: '#2A1A63', key: '3' },
+  { id: 'skysea', label: 'Sky & Sea', bg: '#6FE0D0', fg: '#00332D', key: '4' },
+  { id: 'map', label: 'Map', bg: '#7BE0A0', fg: '#003820', key: 'm' },
 ];
 
 export const MUTED = '#A9B7D0';
+
+// the alert banner and the fog tile
+export const ALERT = { bg: '#FF8A65', ink: '#3A0A00', soft: '#5A1A08' };
+
+// pastel for the UV tile by level. the top two follow the alert red and the lavender
+export const UV_PALS: Record<string, Pal> = {
+  None: GREEN,
+  Low: GREEN,
+  Moderate: PEACH,
+  High: SALMON,
+  'Very High': { ...SALMON, bg: ALERT.bg, ink: ALERT.ink, soft: ALERT.soft },
+  Extreme: LAVENDER,
+};

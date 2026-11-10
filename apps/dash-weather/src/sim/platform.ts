@@ -2,14 +2,18 @@
 // and every map tile is drawn on the fly, so nothing here is real weather or a real map.
 //
 // address options (all optional):
-//   units=metric  clock=24  tide=<station id>  darken=0  reverse=1  lat=..&lon=..
-//   fail=weather,aqi,tides,radar,tiles,position,all  makes those feeds fail
+//   units=metric  clock=24  tide=<station id>  darken=0  reverse=1  lat=..&lon=..  now=<unix seconds>
+//   soon=<minutes>  rain starts in about that long      fog=1  very low visibility      alert=1  two made-up alerts
+//   dim_night=true  animate_radar=false  standby_enabled=true  standby_minutes=1  standby_clock=true
+//   place2_name=..&place2_lat=..&place2_lon=..  sets the second place
+//   fail=weather,aqi,tides,radar,tiles,position,alerts,all  makes those feeds fail
 //   slow=ms  adds a delay to every reply
 
 import type { Coord } from '../data/types';
-import type { FetchResult, Platform, PositionResult } from '../platform/types';
+import type { BacklightState, FetchResult, Platform, PositionResult } from '../platform/types';
 import {
   airQualityFixture,
+  alertsFixture,
   forecastFixture,
   predictionsFixture,
   radarIndexFixture,
@@ -132,16 +136,54 @@ function drawRadar(z: number, tx: number, ty: number): Promise<Uint8Array> {
   return toPng(canvas);
 }
 
+// SIMULATED screen light: remembers the setting and darkens the page by the same factor so a screenshot shows it
+function simBacklight(): Platform['backlight'] {
+  let state: BacklightState = { mode: 'manual', level: 1, effective: 1 };
+  const show = () => {
+    document.documentElement.style.filter = state.effective < 1 ? `brightness(${state.effective})` : '';
+  };
+  return {
+    async get() {
+      return { ...state };
+    },
+    async setAuto() {
+      state = { mode: 'auto', level: state.level, effective: 1 };
+      show();
+    },
+    async setManual(level) {
+      state = { mode: 'manual', level, effective: level };
+      show();
+    },
+  };
+}
+
 export function simPlatform(params: URLSearchParams): Platform {
   const fails = new Set((params.get('fail') ?? '').split(',').filter(Boolean));
   const failAll = fails.has('all');
   const slow = Number(params.get('slow') ?? 60);
   const memory = new Map<string, string>();
   const config: Record<string, string> = {};
-  for (const k of ['units', 'clock', 'tile_url', 'location_mode', 'manual_lat', 'manual_lon']) {
+  for (const k of [
+    'units',
+    'clock',
+    'tile_url',
+    'location_mode',
+    'manual_lat',
+    'manual_lon',
+    'dim_night',
+    'animate_radar',
+    'standby_enabled',
+    'standby_minutes',
+    'standby_clock',
+    'place2_name',
+    'place2_lat',
+    'place2_lon',
+  ]) {
     const v = params.get(k);
     if (v !== null) config[k] = v;
   }
+  // asking to start asleep also turns the setting on, since with it off the screen never sleeps
+  if (params.get('standby') === 'now' && config.standby_enabled === undefined) config.standby_enabled = 'true';
   if (params.get('tide')) config.tide_station = params.get('tide')!;
   if (params.get('darken') === '0') config.map_darken = 'false';
   if (params.get('reverse') === '1') config.dial_reverse = 'true';
@@ -160,7 +202,20 @@ export function simPlatform(params: URLSearchParams): Platform {
       await new Promise(r => setTimeout(r, slow));
       const u = new URL(url);
       const unreachable: FetchResult = { ok: false, error: 'Phone not connected' };
-      if (u.host === 'api.open-meteo.com') return fail('weather') ? unreachable : json(forecastFixture(nowS, SIM_OFFSET_S));
+      if (u.host === 'api.open-meteo.com') {
+        if (fail('weather')) return unreachable;
+        // the second place is the only one the simulator puts north of 41.5 degrees
+        const second = Number(u.searchParams.get('latitude')) > 41.5 && !params.get('lat');
+        const soon = params.get('soon');
+        return json(
+          forecastFixture(nowS, SIM_OFFSET_S, {
+            soon: soon === null ? undefined : Number(soon),
+            fog: params.get('fog') === '1',
+            second,
+          }),
+        );
+      }
+      if (u.host === 'api.weather.gov') return fail('alerts') ? unreachable : json(alertsFixture(nowS, params.get('alert') === '1'));
       if (u.host === 'air-quality-api.open-meteo.com') return fail('aqi') ? unreachable : json(airQualityFixture(nowS));
       if (u.host === 'api.rainviewer.com') return fail('radar') ? unreachable : json(radarIndexFixture(nowS));
       if (u.host === 'api.tidesandcurrents.noaa.gov') {
@@ -196,5 +251,6 @@ export function simPlatform(params: URLSearchParams): Platform {
     async launcherGesture() {
       return params.get('gesture');
     },
+    backlight: simBacklight(),
   };
 }

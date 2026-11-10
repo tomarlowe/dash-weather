@@ -1,6 +1,7 @@
-import type { Aqi, Coord, DayWx, HourWx, Weather } from './types';
+import type { Aqi, Coord, DayWx, HourWx, Minute, Weather } from './types';
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
+const numOrNull = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
 // two decimals is about 1 km: plenty for a forecast, and the provider never learns the exact spot
 const fix = (n: number) => n.toFixed(2);
@@ -9,9 +10,12 @@ export function forecastUrl(c: Coord): string {
   const p = [
     `latitude=${fix(c.lat)}`,
     `longitude=${fix(c.lon)}`,
-    'current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,dew_point_2m',
-    'hourly=temperature_2m,weather_code,precipitation_probability,is_day',
-    'daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+    'current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m',
+    'hourly=temperature_2m,weather_code,precipitation_probability,is_day,visibility,uv_index',
+    'daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max',
+    // two hours of 15 minute steps. native in north america and central europe, filled in from hourly elsewhere
+    'minutely_15=precipitation',
+    'forecast_minutely_15=8',
     'timezone=auto',
     'timeformat=unixtime',
     'forecast_days=5',
@@ -59,6 +63,9 @@ export function parseForecast(json: unknown, coord: Coord, nowS: number): Weathe
       code: num(arr(hourly.weather_code)[i]),
       isDay: num(arr(hourly.is_day)[i], 1) === 1,
       precip: num(arr(hourly.precipitation_probability)[i]),
+      // meters from the service
+      visKm: ((m: number | null) => (m === null ? null : m / 1000))(numOrNull(arr(hourly.visibility)[i])),
+      uv: numOrNull(arr(hourly.uv_index)[i]),
     });
   }
 
@@ -76,8 +83,20 @@ export function parseForecast(json: unknown, coord: Coord, nowS: number): Weathe
       lo,
       code: num(arr(daily.weather_code)[i]),
       precip: num(arr(daily.precipitation_probability_max)[i]),
+      uvMax: numOrNull(arr(daily.uv_index_max)[i]),
     });
   }
+
+  // a missing or odd minute series never fails the whole forecast
+  const mins = isObj(json.minutely_15) ? json.minutely_15 : {};
+  const minutes: Minute[] = [];
+  const mTimes = arr(mins.time);
+  for (let i = 0; i < mTimes.length; i++) {
+    const t = toUnix(mTimes[i], utcOffsetS);
+    const mm = arr(mins.precipitation)[i];
+    if (t !== null && typeof mm === 'number' && Number.isFinite(mm)) minutes.push({ t, mm });
+  }
+
   if (!hours.length || !days.length) throw new Error('weather reply had no forecast data');
 
   return {
@@ -93,9 +112,11 @@ export function parseForecast(json: unknown, coord: Coord, nowS: number): Weathe
       isDay: num(cur.is_day, 1) === 1,
       windKmh: num(cur.wind_speed_10m),
       windDir: num(cur.wind_direction_10m),
+      gustKmh: num(cur.wind_gusts_10m, num(cur.wind_speed_10m)),
     },
     hours,
     days,
+    minutes,
   };
 }
 

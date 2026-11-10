@@ -30,9 +30,11 @@ function Settings() {
       <section className="help">
         <h2>Controls</h2>
         <ul>
-          <li>Buttons 1 to 4: Hourly, Today, Map, 5-Day</li>
-          <li>Small recessed button: Sky &amp; Sea (tides, sun, moon, air quality)</li>
-          <li>Dial: zooms the Map screen</li>
+          <li>Buttons 1 to 4: Hourly, Today, 5-Day, Sky &amp; Sea (tides, sun, moon, air quality)</li>
+          <li>Small recessed button: Map</li>
+          <li>Dial: turn it to switch screens</li>
+          <li>Dial press, on Hourly or Map: turn the dial to scrub the next 24 hours or to zoom. It goes back to switching screens after about 10 seconds</li>
+          <li>Moon icon: dim or brighten the screen. Pin icon, once a second place is set: switch places</li>
         </ul>
       </section>
 
@@ -50,8 +52,9 @@ function Settings() {
         <h2>Data sources</h2>
         <p>
           Forecast and air quality: <a href="https://open-meteo.com/">Open-Meteo.com</a> (air quality from Copernicus CAMS). Tides:
-          NOAA CO-OPS. Radar: <a href="https://www.rainviewer.com/">RainViewer</a>. Map: OpenStreetMap contributors. Sun and moon are
-          worked out on the device.
+          NOAA CO-OPS. Radar: <a href="https://www.rainviewer.com/">RainViewer</a>. Alerts, in the US only: the{' '}
+          <a href="https://www.weather.gov/">National Weather Service</a>, which may be late or missing, so not for safety. Map:
+          OpenStreetMap contributors. Sun and moon are worked out on the device.
         </p>
       </section>
     </main>

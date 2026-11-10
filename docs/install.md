@@ -18,9 +18,11 @@ The companion app has an "install from url or file" panel on its Apps screen. It
 2. Open the "install from url or file" panel.
 3. Paste this address, then tap install:
 
-   `https://tomarlowe.github.io/dash-weather/r/01a1a417-eafb-71c3-b41e-70de98fc1cb7/0.1.0.zip`
+   `https://tomarlowe.github.io/dash-weather/r/01a1a417-eafb-71c3-b41e-70de98fc1cb7/0.2.0.zip`
 
-This is the zip for version 0.1.0. The [catalog](https://tomarlowe.github.io/dash-weather/catalog.v1.json) lists the
+This is the zip for version 0.2.0, and works once 0.2.0 is published. The app id is unchanged, so it should upgrade
+in place and keep your settings (not yet checked on a real device). Older versions stay available at the same kind of address with their own number (0.1.0.zip, and so on). The
+[catalog](https://tomarlowe.github.io/dash-weather/catalog.v1.json) lists the
 address of every version.
 
 ## Option 3: install a downloaded zip file
@@ -36,8 +38,10 @@ app showed.
 
 - Dash Weather uses your phone's location, through the companion app. Allow location for the companion app when your
   phone asks. If you would rather not, open the app's settings and set Location to "Fixed place", then enter coordinates.
-- Press button 1 to 4 or the recessed button to switch screens. The [user guide](user-guide.md) lists every control.
-- Open the app's settings from the companion app to change units, clock and the rest.
+- Press button 1 to 4 or the recessed button to switch screens, or turn the dial to step through them. The
+  [user guide](user-guide.md) lists every control, including what pressing the dial does.
+- Open the app's settings from the companion app to change units, clock, standby, a second place and the rest.
+- Dash Weather is not for navigation or safety. It is a glance at the weather, not a warning system.
 
 If something does not work, see [troubleshooting](troubleshooting.md).
 

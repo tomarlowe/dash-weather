@@ -2,10 +2,14 @@ import { createContext, useContext, useSyncExternalStore } from 'react';
 import { clock } from '../data/format';
 import { Repo, STALE_S, type RepoState } from '../data/repo';
 import type { TileLoader } from '../platform/tileloader';
+import type { Backlight } from '../platform/types';
 
 export interface AppContext {
   repo: Repo;
   loader: TileLoader;
+  backlight: Backlight;
+  // the simulator can open straight on the standby screen
+  startInStandby?: boolean;
 }
 
 export const Ctx = createContext<AppContext | null>(null);
@@ -38,4 +42,11 @@ export function offlineNote(s: RepoState): string | null {
   if (!w.data) return null;
   if (w.status !== 'error' && s.nowS - w.data.fetchedAt <= STALE_S) return null;
   return `Offline. Showing ${clock(w.data.fetchedAt, w.data.utcOffsetS, s.settings.clock24)}`;
+}
+
+// seconds east of utc for the place on screen. the forecast knows it exactly, until then the longitude gives a good guess
+export function offsetFor(s: RepoState): number {
+  if (s.weather.data) return s.weather.data.utcOffsetS;
+  if (s.coord) return Math.round(s.coord.lon / 15) * 3600;
+  return 0;
 }

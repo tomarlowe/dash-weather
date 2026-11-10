@@ -100,5 +100,34 @@ export function devicePlatform(client: BridgethingClient): Platform {
         return null;
       }
     },
+
+    backlight: {
+      async get() {
+        try {
+          const r = await client.hardware.stateGet();
+          if (!r.ok) return null;
+          const b = r.response.state.brightness;
+          return { mode: b.mode, level: b.level, effective: b.effectiveLevel };
+        } catch {
+          return null;
+        }
+      },
+      async setAuto() {
+        try {
+          await client.hardware.displaySetMode({ mode: 'auto' });
+        } catch {
+          // the light is a nicety, the app works without it
+        }
+      },
+      async setManual(level) {
+        try {
+          // the level is ignored unless the mode is manual
+          await client.hardware.displaySetMode({ mode: 'manual' });
+          await client.hardware.displaySetLevel({ level: Math.max(0, Math.min(1, level)) });
+        } catch {
+          // as above
+        }
+      },
+    },
   };
 }

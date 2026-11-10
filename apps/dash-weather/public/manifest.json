@@ -1,8 +1,8 @@
 {
   "id": "01a1a417-eafb-71c3-b41e-70de98fc1cb7",
   "name": "Dash Weather",
-  "version": "0.1.0",
-  "description": "Hourly, today, radar map, 5-day, plus tides, sun, moon and air quality. Uses your phone's location.",
+  "version": "0.2.0",
+  "description": "Hourly, today, radar loop, 5-day, plus UV, tides, sun, moon and air quality. Uses your phone's location.",
   "icon": "icon.png",
   "settings": "settings.html",
   "config": [
@@ -12,8 +12,14 @@
         "key": "units",
         "label": "Units",
         "description": "Imperial is F, mph, miles and feet. Metric is C, km/h, kilometers and meters.",
-        "choices": ["imperial", "metric"],
-        "choiceLabels": { "imperial": "Imperial (F, mph)", "metric": "Metric (C, km/h)" },
+        "choices": [
+          "imperial",
+          "metric"
+        ],
+        "choiceLabels": {
+          "imperial": "Imperial (F, mph)",
+          "metric": "Metric (C, km/h)"
+        },
         "default": "imperial"
       }
     },
@@ -23,8 +29,14 @@
         "key": "clock",
         "label": "Clock",
         "description": "How times are shown.",
-        "choices": ["12", "24"],
-        "choiceLabels": { "12": "12-hour (4:12 PM)", "24": "24-hour (16:12)" },
+        "choices": [
+          "12",
+          "24"
+        ],
+        "choiceLabels": {
+          "12": "12-hour (4:12 PM)",
+          "24": "24-hour (16:12)"
+        },
         "default": "12"
       }
     },
@@ -34,8 +46,14 @@
         "key": "location_mode",
         "label": "Location",
         "description": "Auto follows your phone's GPS. Manual always uses the coordinates below.",
-        "choices": ["auto", "manual"],
-        "choiceLabels": { "auto": "Follow my phone", "manual": "Fixed place" },
+        "choices": [
+          "auto",
+          "manual"
+        ],
+        "choiceLabels": {
+          "auto": "Follow my phone",
+          "manual": "Fixed place"
+        },
         "default": "auto"
       }
     },
@@ -101,11 +119,111 @@
       "data": {
         "key": "dial_reverse",
         "label": "Reverse the dial",
-        "description": "Turn this on if the map zooms the wrong way when you turn the dial.",
+        "description": "Turn this on if the dial goes the wrong way. It flips the screens, the map zoom and the hour scrubbing together.",
         "default": false
+      }
+    },
+    {
+      "type": "boolean",
+      "data": {
+        "key": "dim_night",
+        "label": "Dim at night",
+        "description": "Lowers the screen light after sunset and puts it back at sunrise, for the place on screen. The moon button on the screen wins until the sun next rises or sets. Off by default.",
+        "default": false
+      }
+    },
+    {
+      "type": "boolean",
+      "data": {
+        "key": "animate_radar",
+        "label": "Animate radar",
+        "description": "Plays the last hour of radar as a loop on the Map screen. Turn off to show only the latest picture and fetch less.",
+        "default": true
+      }
+    },
+    {
+      "type": "boolean",
+      "data": {
+        "key": "standby_enabled",
+        "label": "Standby screen",
+        "description": "After a quiet spell the screen swaps to plain white on black with the temperature and chance of rain, and the screen light goes down. Any button, dial turn or touch wakes it. Off by default.",
+        "default": false
+      }
+    },
+    {
+      "type": "enum",
+      "data": {
+        "key": "standby_minutes",
+        "label": "Standby starts after",
+        "description": "How long with no button, dial or touch before standby starts.",
+        "choices": [
+          "1",
+          "2",
+          "5",
+          "10",
+          "30"
+        ],
+        "choiceLabels": {
+          "1": "1 minute",
+          "2": "2 minutes",
+          "5": "5 minutes",
+          "10": "10 minutes",
+          "30": "30 minutes"
+        },
+        "default": "5"
+      }
+    },
+    {
+      "type": "boolean",
+      "data": {
+        "key": "standby_clock",
+        "label": "Clock on standby",
+        "description": "Shows a small clock in the corner of the standby screen. It follows the 12-hour or 24-hour setting above. Off by default.",
+        "default": false
+      }
+    },
+    {
+      "type": "string",
+      "data": {
+        "key": "place2_name",
+        "label": "Second place name",
+        "description": "Shown at the top of Hourly when the pin button switches to the second place. Example: Boston, MA",
+        "pattern": "^[^<>]*$",
+        "minLength": 0,
+        "maxLength": 40,
+        "default": ""
+      }
+    },
+    {
+      "type": "number",
+      "data": {
+        "key": "place2_lat",
+        "label": "Second place latitude",
+        "description": "The pin button appears once both coordinates are set. Example: 42.3601",
+        "min": -90,
+        "max": 90,
+        "step": 0.0001,
+        "default": 0
+      }
+    },
+    {
+      "type": "number",
+      "data": {
+        "key": "place2_lon",
+        "label": "Second place longitude",
+        "description": "Example: -71.0589",
+        "min": -180,
+        "max": 180,
+        "step": 0.0001,
+        "default": 0
       }
     }
   ],
-  "permissions": ["geo"],
-  "art": { "heroPx": 248, "thumbPx": 96 }
+  "permissions": [
+    "geo"
+  ],
+  "art": {
+    "heroPx": 248,
+    "thumbPx": 96
+  }
 }

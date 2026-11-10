@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { CalendarGlyph, ClockGlyph, MapGlyph, SunGlyph, WavesGlyph, WetDrop } from './icons';
+import { CalendarGlyph, ClockGlyph, MapGlyph, MoonGlyph, PinGlyph, SunGlyph, WavesGlyph, WetDrop } from './icons';
 import { SCREENS, type ScreenId } from './theme';
 
 const GLYPHS: Record<ScreenId, typeof ClockGlyph> = {
@@ -10,14 +10,38 @@ const GLYPHS: Record<ScreenId, typeof ClockGlyph> = {
   skysea: WavesGlyph,
 };
 
-export function TopStrip({ active, onPick }: { active: ScreenId; onPick: (id: ScreenId) => void }) {
+export interface StripProps {
+  active: ScreenId;
+  onPick: (id: ScreenId) => void;
+  // the pin shows only when a second place is set
+  pin: { show: boolean; away: boolean; onTap: () => void };
+  moon: { lit: boolean; onTap: () => void };
+}
+
+const icoBase: CSSProperties = {
+  position: 'relative',
+  flex: 'none',
+  width: 36,
+  height: 44,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'none',
+  border: 0,
+  padding: 0,
+  margin: 0,
+  font: 'inherit',
+};
+
+export function TopStrip({ active, onPick, pin, moon }: StripProps) {
   return (
-    <nav aria-label="Screens" style={{ display: 'flex', gap: 8, padding: '12px 16px', height: 68 }}>
+    <nav aria-label="Screens" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', height: 68 }}>
       {SCREENS.map(s => {
         const Glyph = GLYPHS[s.id];
         const on = s.id === active;
         const style: CSSProperties = {
           flex: 1,
+          minWidth: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -37,14 +61,51 @@ export function TopStrip({ active, onPick }: { active: ScreenId; onPick: (id: Sc
           </div>
         );
       })}
+      {pin.show && (
+        <button
+          type="button"
+          aria-label={pin.away ? 'Second place showing. Tap to switch back to your location.' : 'Your location. Tap to switch to your second place.'}
+          style={{ ...icoBase, color: pin.away ? '#8AB4F8' : '#9AA3B5' }}
+          onPointerDown={pin.onTap}>
+          <PinGlyph size={24} filled={pin.away} />
+          {pin.away && (
+            <span
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: 5,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 8,
+                background: '#8AB4F8',
+                color: '#0A2A5E',
+                fontSize: 12,
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: 1,
+              }}>
+              2
+            </span>
+          )}
+        </button>
+      )}
+      <button
+        type="button"
+        aria-label={moon.lit ? 'Screen is dimmed. Tap to brighten.' : 'Dim the screen'}
+        style={{ ...icoBase, color: moon.lit ? '#FFD966' : '#9AA3B5' }}
+        onPointerDown={moon.onTap}>
+        <MoonGlyph size={24} filled={moon.lit} />
+      </button>
     </nav>
   );
 }
 
-export function Frame({ active, onPick, children }: { active: ScreenId; onPick: (id: ScreenId) => void; children: ReactNode }) {
+export function Frame({ children, ...strip }: StripProps & { children: ReactNode }) {
   return (
     <div className="screen">
-      <TopStrip active={active} onPick={onPick} />
+      <TopStrip {...strip} />
       <div style={{ flex: 1, minHeight: 0, padding: '0 16px 16px' }}>{children}</div>
     </div>
   );

@@ -87,6 +87,15 @@ export function sunTimes(lat: number, lon: number, tSec: number, utcOffsetS: num
   };
 }
 
+// true between sunset and the next sunrise. the offset only picks which calendar day the sun times are worked out for,
+// so one guessed from the longitude is good enough when the real one is not known yet
+export function isNight(lat: number, lon: number, tSec: number, utcOffsetS?: number): boolean {
+  const st = sunTimes(lat, lon, tSec, utcOffsetS ?? Math.round(lon / 15) * 3600);
+  if (st.state === 'polarDay') return false;
+  if (st.state === 'polarNight' || st.sunrise === null || st.sunset === null) return true;
+  return tSec < st.sunrise || tSec >= st.sunset;
+}
+
 export function daylightMinutes(s: SunTimes): number {
   if (s.state === 'polarDay') return 1440;
   if (s.state === 'polarNight' || s.sunrise === null || s.sunset === null) return 0;
