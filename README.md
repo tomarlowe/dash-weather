@@ -4,6 +4,8 @@ A weather station for the discontinued Spotify Car Thing, running on [bridgethin
 one for each button, in bright Material 3 Expressive colors on a black background. It is free, has no accounts or API
 keys, and is open source.
 
+> Built by Thomas Marlowe with help from Claude, an AI tool from Anthropic.
+
 ## Screenshots
 
 <table>
