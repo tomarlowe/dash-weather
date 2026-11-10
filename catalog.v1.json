@@ -1,7 +1,7 @@
 {
   "$schema": "https://apps.bridgething.com/schemas/catalog/v1.json",
   "schema": "catalog.v1",
-  "updated_at": "2026-11-04T19:05:09.995Z",
+  "updated_at": "2026-11-10T19:26:59.483Z",
   "repo": {
     "name": "Dash Weather",
     "description": "A five-screen weather station for the Spotify Car Thing.",
@@ -12,7 +12,7 @@
     {
       "id": "01a1a417-eafb-71c3-b41e-70de98fc1cb7",
       "name": "Dash Weather",
-      "description": "Hourly, today, radar map, 5-day, plus tides, sun, moon and air quality. Uses your phone's location.",
+      "description": "Hourly, today, radar loop, 5-day, plus UV, tides, sun, moon and air quality. Uses your phone's location.",
       "author": "Thomas Marlowe",
       "icon": "https://tomarlowe.github.io/dash-weather/icons/01a1a417-eafb-71c3-b41e-70de98fc1cb7.png",
       "screenshots": [
@@ -28,6 +28,25 @@
       "homepage": "https://github.com/tomarlowe/dash-weather",
       "source": "https://github.com/tomarlowe/dash-weather",
       "versions": [
+        {
+          "version": "0.2.0",
+          "released_at": "2026-11-10T19:26:59.449Z",
+          "download": {
+            "url": "https://tomarlowe.github.io/dash-weather/r/01a1a417-eafb-71c3-b41e-70de98fc1cb7/0.2.0.zip",
+            "size": 613366,
+            "sha256": "2d61a72ad72c578437c74831df746bfabfd18af2576b19b0de628cdec3490bd4"
+          },
+          "settings": {
+            "url": "https://tomarlowe.github.io/dash-weather/s/01a1a417-eafb-71c3-b41e-70de98fc1cb7/0.2.0.html",
+            "size": 41041,
+            "sha256": "f58828c9ba92b1e98aade27f6e8306ec4ea8b327f5b818d3b72394eded3e9158"
+          },
+          "permissions": [
+            "geo"
+          ],
+          "min_libbridgething_version": "0.16.0",
+          "changelog": "Controls (this changes how the app is used):\n\n- New screen order: Hourly (button 1), Today (2), 5-Day (3), Sky & Sea (4) and Map (the recessed button). Map and 5-Day\n  swapped places.\n- Turning the dial now switches screens, on every screen, and wraps around. \"Reverse the dial\" flips the direction.\n- On Hourly and Map the dial click switches the dial between changing screens and a second job: scrubbing the next 24\n  hours one hour per notch (Hourly) or zooming (Map). It goes back by itself after about 10 seconds.\n- The back button is still not used.\n\nNew:\n\n- Rain soon: a \"Rain in about 15 min\" chip on Hourly and the same in the Today tip. It is much less precise outside North\n  America and central Europe.\n- Wind gusts, visibility (the tile turns orange-red in fog) and UV index with the day's peak, on Today.\n- US weather alerts from the National Weather Service as a banner on Today. They can be late or missing, so they are never\n  a safety tool.\n- Radar loop: the last hour of radar plays on the Map, with the age of each frame. It can be turned off.\n- A second place: set a name and coordinates in settings, then tap the pin icon to flip every screen to that place.\n- A moon icon, at the top left because the dial covers the top right of the Car Thing, dims the screen by hand, and \"Dim at night\" does it from the sun's position at the place you are looking at.\n- Standby: after a quiet spell (1 to 30 minutes, off by default) the screen shows only the temperature, sky and chance of\n  rain in white on black, with an optional clock. Any press or touch wakes it, and only wakes it.\n\nChanged:\n\n- Today: chance of rain moved up next to the high and low, and the right side now has Feels like, Wind with gusts, UV and\n  Visibility.\n\nNot yet tested on a real Car Thing: the dial and its click, screen dimming, standby, the radar loop over the phone link\nand everything marked new above. The data fields were checked against each service's documentation but not against live\nreplies. See docs/device-test-checklist.md."
+        },
         {
           "version": "0.1.0",
           "released_at": "2026-11-04T18:32:26.240Z",
